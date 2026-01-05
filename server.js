@@ -28,13 +28,38 @@ app.listen(port, () => {
 
 //Example Route: Get all cards
 
+
 app.get('/allcards', async (req, res) => {
-    try {
-        let connection = await mysql.createConnection(dbConfig);
-        const [rows, fields] = await connection.execute('SELECT * FROM defaultdb.cards');
-        res.json(rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error for allcards' });
-    }
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM cards');
+    await connection.end();
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error for allcards' });
+  }
+});
+
+//Example route: Create a new card
+app.post('/addcard', async (req, res) => {
+  const { card_name, card_pic } = req.body;
+
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    await connection.execute(
+      'INSERT INTO cards (card_name, card_pic) VALUES (?, ?)',
+      [card_name, card_pic]
+    );
+    await connection.end();
+
+    res.status(201).json({
+      message: `Card ${card_name} added successfully`
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: `Server error - could not add card ${card_name}`
+    });
+  }
 });
